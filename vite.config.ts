@@ -17,6 +17,9 @@ export default defineConfig({
       devOptions: {
         enabled: true
       },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 50000000
+      },
       manifest: {
         "theme_color": "#0F172A",
         "background_color": "#f5f8fa",
@@ -51,6 +54,13 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: true
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
