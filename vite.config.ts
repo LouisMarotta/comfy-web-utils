@@ -6,9 +6,12 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite'
 
+let base = process.env?.CI
+  ? '/comfy-web-utils/'
+  : '/';
 
-// https://vite.dev/config/
 export default defineConfig({
+  base: base,
   plugins: [
     vue(),
     vueDevTools(),
