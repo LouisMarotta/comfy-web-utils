@@ -9,6 +9,7 @@
         <div class="flex items-center gap-3">
             <ThemeToggle />
             <Button as="a" href="https://github.com/louismarotta/comfy-web-utils">Contribute <SimpleIcon logo="github" /> </Button>
+            <Button class="bg-[#FF6433]" as="a" href="https://ko-fi.com/louismarotta">Donate <SimpleIcon logo="kofi" /> </Button>
         </div>
     </nav>
 </template>
