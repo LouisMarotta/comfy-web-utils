@@ -3,7 +3,7 @@
 
     <div class="page mx-auto max-w-5xl p-3">
 
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <SkillCard v-for="skill in skills"
                 :title="skill.title"
                 :description="skill.description"
@@ -20,7 +20,8 @@ let skills = [
     {
         title: 'Prompt Reader',
         description: 'Extract metadata from ComfyUI PNGs',
-        route: '/skill/prompt-reader'
+        route: '/skill/prompt-reader',
+        tags: ['offline', 'prompt', 'metadata']
     }
 ]
 
