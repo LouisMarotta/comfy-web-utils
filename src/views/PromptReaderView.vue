@@ -18,7 +18,7 @@
                     </EmptyHeader>
                     <EmptyContent>
                         <div class="flex flex-col gap-1">
-                            <Input type="file" accept="image/png" @change="handleFileUpload">Upload Image</Input>
+                            <Input type="file" ref="imageInput" accept="image/png" @change="handleFileUpload">Upload Image</Input>
                             <!--
                                 <span>or</span>
                                 <Input v-model="imageUrl" placeholder="https://example.com/image.png..." />
@@ -44,9 +44,9 @@
                     </CardHeader>
 
                     <CardContent>
-                        <pre v-if="metadata">
-                            {{ metadata . promptDisplay }}
-                        </pre>
+                        <code v-if="metadata">
+                            {{ metadata . positive }}
+                        </code>
 
                         <div class="flex flex-end">
                             <Button variant="outline" @click="() => {}">
@@ -62,9 +62,9 @@
                     </CardHeader>
 
                     <CardContent>
-                        <pre v-if="metadata">
-                            {{ metadata . promptDisplay }}
-                        </pre>
+                        <code v-if="metadata">
+                            {{ metadata . negative }}
+                        </code>
 
                         <div class="flex flex-end">
                             <Button variant="outline" @click="() => {}">
@@ -98,7 +98,7 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue';
+    import { ref, useTemplateRef } from 'vue';
     import Navbar from '@/components/Navbar.vue';
     import Empty from '@/components/ui/empty/Empty.vue';
     import EmptyHeader from '@/components/ui/empty/EmptyHeader.vue';
@@ -115,10 +115,15 @@
 
     import exifReader from 'exifreader';
 
-
     const imageUrl = ref(null);
     const metadata = ref(null);
     const error = ref(null);
+
+    const clearImage = (event) => {
+        imageUrl.value = null;
+        metadata.value = null;
+        error.value = null;
+    }
 
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
@@ -156,6 +161,8 @@
                     const availableKeys = Object.keys(tags);
                     metadata.value = {
                         promptDisplay: null,
+                        positive: null,
+                        negative: null,
                         workflowDisplay: null,
                         rawKeys: availableKeys.length > 0 ? JSON.stringify(availableKeys, null, 2) :
                             "No text chunks found."
@@ -170,8 +177,7 @@
 
                 if (promptRaw) {
                     try {
-                        const parsed = JSON.parse(promptRaw);
-                        parsedPrompt = typeof parsed === 'object' ? JSON.stringify(parsed, null, 2) : promptRaw;
+                        parsedPrompt = JSON.parse(promptRaw);
                     } catch (e) {
                         parsedPrompt = promptRaw;
                     }
@@ -179,16 +185,42 @@
 
                 if (workflowRaw) {
                     try {
-                        const parsed = JSON.parse(workflowRaw);
-                        parsedWorkflow = JSON.stringify(parsed, null, 2);
+                        parsedWorkflow = JSON.parse(workflowRaw);
                     } catch (e) {
                         parsedWorkflow = workflowRaw;
                     }
                 }
 
+                let positivePrompt = null;
+                let negativePrompt = null;
+                if (parsedPrompt) {
+                    // Find the sampler
+                    let sampler = null;
+                    for (const [node_id, node] of Object.entries(parsedPrompt)) {
+                        if (node?.class_type.indexOf('Sampler') == 0) {
+                            sampler = node;
+                        }
+                    }
+
+                    if (sampler) {
+                        let negativeId = sampler?.inputs?.negative[0];
+                        let positiveId = sampler?.inputs?.positive[0];
+
+                        // Negative Text
+                        let negativeNode = parsedPrompt[negativeId];
+                        negativePrompt = negativeNode?.inputs?.['prompt'] || negativeNode?.inputs?.['text'] || '';
+
+                        // Positive Text
+                        let positiveNode = parsedPrompt[positiveId];
+                        positivePrompt = positiveNode?.inputs?.['prompt'] || positiveNode?.inputs?.['text'] || '';
+                    }
+                }
+
                 metadata.value = {
-                    promptDisplay: parsedPrompt,
-                    workflowDisplay: parsedWorkflow,
+                    promptDisplay: typeof parsedPrompt === 'string' ? JSON.stringify(parsedPrompt, null, 2) : parsedPrompt,
+                    workflowDisplay: typeof parsedWorkflow === 'string' ? JSON.stringify(parsedWorkflow, null, 2) : parsedWorkflow,
+                    positive: positivePrompt,
+                    negative: negativePrompt,
                     rawKeys: null // Hide raw keys if successful
                 };
 
